@@ -1,0 +1,33 @@
+{
+  "bb": {"time": 1704067200, "pct": 0.25},
+  "trends": {"time": "2024-01-01 00:00:00+00:00", "tf": "H1", "trend": "buy"},
+  "families": {"date": "2024-01-01", "tf": "MN1", "family_buy": "A", "family_sell": ""},
+  "levels": {
+    "period": "D1", "level_type": "high", "price": 1.25,
+    "time_from": 1704067200, "time_to": 1704153600, "color": "#112233", "dashed": false
+  },
+  "session_levels": {
+    "date": "2024-01-01", "pair": "TEST", "session": "london",
+    "start": "2024-01-01T08:00:00Z", "end": "2024-01-01T17:00:00Z",
+    "open": 1.25, "high": 1.26, "low": 1.24, "close": 1.255,
+    "avg_50": 1.25, "range": 0.02, "direction": "buy", "range_pips": 200
+  },
+  "triggers": {
+    "datetime": "2024-01-01 12:00:00+00:00", "row_type": "trigger",
+    "pair": "TEST", "timeframe": "M5", "dir": "buy", "entry": 1.25, "bb_trigger": 0.1,
+    "atr_short": null, "atr_long": 0.01, "ref_short": null, "ref_long": 1.24,
+    "p_short": "insufficient_bars", "p_long": 0, "bkt_short": "", "bkt_long": 0, "cell": null
+  },
+  "divergences": {
+    "divergence_datetime": "2024-01-01 13:00:00+00:00", "pair": "TEST",
+    "timeframe": "M5", "dir": "buy", "divergence_close": 1.255, "divergence_bb": 0.3,
+    "pivot_bb_datetime": "2024-01-01T12:00:00Z", "pivot_price": 1.24,
+    "pivot_price_datetime": null
+  },
+  "pivots": {
+    "pivot_bb_datetime": "2024-01-01T12:00:00Z", "pair": "TEST", "timeframe": "M5",
+    "dir": "BUY", "pivot_bb": 0.1, "pivot_price": 1.24,
+    "pivot_price_datetime": "2024-01-01T11:55:00Z", "pivot_close": 1.25,
+    "pivot_close_datetime": null, "date_suppression": null, "type_suppression": null
+  }
+}

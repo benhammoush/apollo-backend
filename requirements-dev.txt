@@ -1,0 +1,9 @@
+# Verification tools only; runtime pins remain identical to the public release lock.
+-r requirements-public-win-py313.lock
+pip==26.2.2
+ruff==0.17.3
+mypy==2.4.1
+pip-audit==2.10.1
+pip-tools==7.6.2
+PyYAML==6.0.3
+types-PyYAML==6.0.12.20261030

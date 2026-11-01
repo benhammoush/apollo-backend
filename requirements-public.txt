@@ -1,0 +1,10 @@
+# Public market/visitor candidate only; version ranges are NOT a release lock.
+# Windows AMD64 / CPython 3.13 is the current MT5 validation target.
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pandas>=2.2.2
+numpy>=2.0.0
+pyarrow==26.0.0
+MetaTrader5>=5.0.45; sys_platform == "win32"
+httpx>=0.27.0
+psutil>=5.9.0
