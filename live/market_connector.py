@@ -326,10 +326,9 @@ class MT5MarketConnector:
             df = pd.DataFrame(rates)[cols]
             df.rename(columns={"tick_volume": "volume"}, inplace=True)
             df["time"] = pd.to_datetime(df["time"], unit="s", utc=True)
-            # Only filter by from_date; copy_rates_range already bounds the upper
-            # limit, and supplement bars added via copy_rates_from_pos may have
-            # server-time timestamps that appear to exceed a UTC to_date.
-            df = df[df["time"] >= pd.Timestamp(from_date)]
+            # Supplemented bar-open timestamps are UTC and must obey both bounds.
+            df = df[(df["time"] >= pd.Timestamp(from_date))
+                    & (df["time"] <= pd.Timestamp(to_date))]
             return df.sort_values("time").reset_index(drop=True)
         except Exception as e:
             logger.warning(f"get_history error for {symbol}/{tf}: {e}")

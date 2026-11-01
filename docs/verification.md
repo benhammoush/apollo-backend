@@ -56,7 +56,7 @@ normalizes line endings/trailing whitespace while verifying the wording is uncha
 
 Strict lint, docstring-presence, Ruff formatting and mypy checks apply to `scripts/`,
 `tests/tooling/`, the period-level removal regressions and the explicit ASGI test-peer
-helper/regressions and ownership-guard regressions. Existing runtime
+helper/regressions, ownership-guard and history-bound regressions. Existing runtime
 source and legacy tests retain their current style and annotation coverage; their
 compilation, synthetic tests and publication guards remain blocking. Mypy does not
 follow imports into that legacy source. No full-runtime lint, formatting or type
