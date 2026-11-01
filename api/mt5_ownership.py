@@ -101,7 +101,7 @@ def pair_state(root: Path, terminal_id: str, processes: list[WorkerProcess]) -> 
 
 
 class LocalMT5PairOwnership(MT5PairOwnership):
-    """Use the same operation fence and launcher as private mutations/recovery.
+    """Inspect under the shared operation fence; runtime-task startup is not wired.
 
     Construction alone is not activation approval. Source/pin approval and isolated
     real-host validation remain required by bind_market_bootstrap().
@@ -123,10 +123,7 @@ class LocalMT5PairOwnership(MT5PairOwnership):
             return pair_state(self.root, target.terminal_id, inspect_processes(self.root, target.terminal_id))
 
     async def start_if_absent(self, target):
-        """Recheck and launch synchronously under the same cross-process fence."""
-        from api.mt5_host import MT5Host
+        """Validate the pin but deny startup until the trusted task path is wired."""
         with operation_fence(self.root):
             self._validate(target)
-            if pair_state(self.root, target.terminal_id, inspect_processes(self.root, target.terminal_id)) != "stopped":
-                raise OwnershipBusy("MT5 pair is no longer absent")
-            MT5Host(self.root).start_pair(target.terminal_id, expected_source=target.expected_source)
+            raise NotImplementedError("Public start must route through runtime_session.request_launch")

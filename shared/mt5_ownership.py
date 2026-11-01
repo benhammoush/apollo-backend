@@ -51,10 +51,17 @@ class FileFence:
         return self
 
     def release(self):
-        """Close the handle; no unlink/TTL/PID-based lock stealing is permitted."""
+        """Unlock Windows' first byte before close; never unlink or steal a lock."""
         if self.stream is not None:
-            self.stream.close()
+            stream = self.stream
             self.stream = None
+            try:
+                if os.name == "nt":
+                    import msvcrt
+                    stream.seek(0)
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+            finally:
+                stream.close()
 
     def __enter__(self):
         return self.acquire()

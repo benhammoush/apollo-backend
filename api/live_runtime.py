@@ -53,6 +53,8 @@ async def internal_worker_register(body: WorkerRegisterBody, request: Request):
             or not body.worker_id.startswith(f'{body.worker_type}:')):
         raise HTTPException(403)
     host = getattr(request.app.state, 'mt5_host', None)
+    if sources is not None and host is None:
+        raise HTTPException(403)
     if sources is not None and host is not None:
         from api.mt5_binding import target_revision
         tid = body.terminal_id

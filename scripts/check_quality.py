@@ -19,6 +19,7 @@ STRICT_INPUTS = (
     "tests/test_period_levels_removed.py",
     "tests/websocket_session.py",
     "tests/test_websocket_session.py",
+    "tests/test_ownership_guards.py",
 )
 LOCKS = ("requirements-public-win-py313.lock", "requirements-dev-win-py313.lock")
 
