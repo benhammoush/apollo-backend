@@ -13,7 +13,13 @@ import sys
 from scripts.check_publication import check_ignored, check_paths, source_paths, tracked_paths
 from scripts.check_notices import check as check_notices
 
-STRICT_INPUTS = ("scripts", "tests/tooling", "tests/test_period_levels_removed.py")
+STRICT_INPUTS = (
+    "scripts",
+    "tests/tooling",
+    "tests/test_period_levels_removed.py",
+    "tests/websocket_session.py",
+    "tests/test_websocket_session.py",
+)
 LOCKS = ("requirements-public-win-py313.lock", "requirements-dev-win-py313.lock")
 
 

@@ -55,7 +55,8 @@ normalizes line endings/trailing whitespace while verifying the wording is uncha
 ### Legacy quality exception
 
 Strict lint, docstring-presence, Ruff formatting and mypy checks apply to `scripts/`,
-`tests/tooling/` and the new period-level removal regression tests. Existing runtime
+`tests/tooling/`, the period-level removal regressions and the explicit ASGI test-peer
+helper/regressions. Existing runtime
 source and legacy tests retain their current style and annotation coverage; their
 compilation, synthetic tests and publication guards remain blocking. Mypy does not
 follow imports into that legacy source. No full-runtime lint, formatting or type

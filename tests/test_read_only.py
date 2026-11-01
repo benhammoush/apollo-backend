@@ -18,6 +18,7 @@ from api.read_only import ReadOnlyApplication, ReadOnlyPolicy, SelectedResult
 from api.read_only_fixture import fixture_application, fixture_websocket, FixtureServices
 from api.read_only_live import LiveReadServices
 from api.result_contracts import DatasetDescriptor, SCHEMA_VERSION
+from tests.websocket_session import websocket_session
 
 
 ORIGIN = "http://127.0.0.1:5181"
@@ -518,32 +519,36 @@ class ReadOnlyWebSocketTests(unittest.TestCase):
 
         with fixture_application((ORIGIN,)) as app:
             app.websocket_app = traced
-            with TestClient(app) as client, client.websocket_connect("/ws", headers={"Origin": ORIGIN}) as ws:
-                ws.send_json({"type": "subscribe", "symbols": ["EURUSD", "PRIVATE_FIXTURE_ONLY", "GBPUSD"]})
-                self.assertEqual(ws.receive_json(), {
-                    "type": "subscription_status", "status": "partial", "symbols": ["EURUSD"],
-                })
-                self.assertEqual(ws.receive_json()["data"]["symbol"], "EURUSD")
-                self.assertEqual(forwarded[-1], {"type": "subscribe", "symbols": ["EURUSD"]})
-                self.assertEqual(app._connections, 1)
-                # An all-unavailable replacement clears old subscriptions rather
-                # than silently reusing the previous source/symbol selection.
-                ws.send_json({"type": "subscribe", "symbols": ["PRIVATE_FIXTURE_ONLY"]})
-                self.assertEqual(ws.receive_json(), {
-                    "type": "subscription_status", "status": "unavailable", "symbols": [],
-                })
-                ws.send_text("ping")
-                self.assertEqual(ws.receive_text(), "pong")
-                self.assertEqual(forwarded[-1], {"type": "subscribe", "symbols": []})
-                ws.send_json({"type": "subscribe", "symbols": ["EURUSD"]})
-                self.assertEqual(ws.receive_json()["type"], "tick")
-                ws.send_json({"type": "unsubscribe", "symbols": ["EURUSD", "UNKNOWN"]})
-                self.assertEqual(ws.receive_json()["status"], "partial")
-                ws.send_text("ping")
-                self.assertEqual(ws.receive_text(), "pong")
-                self.assertEqual(forwarded[-1], {"type": "unsubscribe", "symbols": ["EURUSD"]})
-                self.assertEqual(app._connections, 1)
-            self.assertEqual(app._connections, 0)
+
+            async def check():
+                """Assert the same protocol behavior, then explicitly join ASGI shutdown."""
+                async with websocket_session(app, ORIGIN) as ws:
+                    await ws.send_json({"type": "subscribe", "symbols": ["EURUSD", "PRIVATE_FIXTURE_ONLY", "GBPUSD"]})
+                    self.assertEqual(await ws.receive_json(), {
+                        "type": "subscription_status", "status": "partial", "symbols": ["EURUSD"],
+                    })
+                    self.assertEqual((await ws.receive_json())["data"]["symbol"], "EURUSD")
+                    self.assertEqual(forwarded[-1], {"type": "subscribe", "symbols": ["EURUSD"]})
+                    self.assertEqual(app._connections, 1)
+                    # An all-unavailable replacement clears the old selection.
+                    await ws.send_json({"type": "subscribe", "symbols": ["PRIVATE_FIXTURE_ONLY"]})
+                    self.assertEqual(await ws.receive_json(), {
+                        "type": "subscription_status", "status": "unavailable", "symbols": [],
+                    })
+                    await ws.send_text("ping")
+                    self.assertEqual(await ws.receive_text(), "pong")
+                    self.assertEqual(forwarded[-1], {"type": "subscribe", "symbols": []})
+                    await ws.send_json({"type": "subscribe", "symbols": ["EURUSD"]})
+                    self.assertEqual((await ws.receive_json())["type"], "tick")
+                    await ws.send_json({"type": "unsubscribe", "symbols": ["EURUSD", "UNKNOWN"]})
+                    self.assertEqual((await ws.receive_json())["status"], "partial")
+                    await ws.send_text("ping")
+                    self.assertEqual(await ws.receive_text(), "pong")
+                    self.assertEqual(forwarded[-1], {"type": "unsubscribe", "symbols": ["EURUSD"]})
+                    self.assertEqual(app._connections, 1)
+                self.assertEqual(app._connections, 0)
+
+            asyncio.run(check())
 
     def test_subscription_cardinality_rejection_keeps_the_connection_usable(self):
         """Well-formed excessive selections do not bypass limits or force reconnects."""
@@ -569,20 +574,26 @@ class ReadOnlyWebSocketTests(unittest.TestCase):
         with fixture_application((ORIGIN,)) as app:
             app.policy = replace(app.policy, max_subscriptions=1)
             app.websocket_app = producer
-            with TestClient(app) as client, client.websocket_connect("/ws", headers={"Origin": ORIGIN}) as ws:
-                ws.send_json({"type": "subscribe", "symbols": ["EURUSD"]})
-                self.assertEqual(ws.receive_json()["type"], "tick")
-                ws.send_json({"type": "subscribe", "symbols": ["EURUSD", "UNKNOWN"]})
-                self.assertEqual(ws.receive_json(), {
-                    "type": "subscription_status", "status": "limit_exceeded", "symbols": [],
-                })
-                ws.send_text("ping")
-                self.assertEqual(ws.receive_json()["type"], "tick")
-                self.assertEqual(ws.receive_text(), "pong")
-                self.assertEqual(forwarded, [{"type": "subscribe", "symbols": ["EURUSD"]}])
-                ws.send_json({"type": "subscribe", "symbols": ["EURUSD"]})
-                self.assertEqual(ws.receive_json()["type"], "tick")
-                self.assertEqual(app._connections, 1)
+
+            async def check():
+                """Keep every rejection/liveness assertion and await admission release."""
+                async with websocket_session(app, ORIGIN) as ws:
+                    await ws.send_json({"type": "subscribe", "symbols": ["EURUSD"]})
+                    self.assertEqual((await ws.receive_json())["type"], "tick")
+                    await ws.send_json({"type": "subscribe", "symbols": ["EURUSD", "UNKNOWN"]})
+                    self.assertEqual(await ws.receive_json(), {
+                        "type": "subscription_status", "status": "limit_exceeded", "symbols": [],
+                    })
+                    await ws.send_text("ping")
+                    self.assertEqual((await ws.receive_json())["type"], "tick")
+                    self.assertEqual(await ws.receive_text(), "pong")
+                    self.assertEqual(forwarded, [{"type": "subscribe", "symbols": ["EURUSD"]}])
+                    await ws.send_json({"type": "subscribe", "symbols": ["EURUSD"]})
+                    self.assertEqual((await ws.receive_json())["type"], "tick")
+                    self.assertEqual(app._connections, 1)
+                self.assertEqual(app._connections, 0)
+
+            asyncio.run(check())
 
     def test_semantic_rejections_still_obey_the_inbound_message_rate_limit(self):
         """Keeping an unavailable subscription alive is not an unlimited reply channel."""

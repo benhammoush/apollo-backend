@@ -8,7 +8,7 @@ select = ["E4", "E7", "E9", "F", "D100", "D101", "D102", "D103", "D104", "D105",
 
 [tool.mypy]
 python_version = "3.13"
-files = ["scripts", "tests/tooling", "tests/test_period_levels_removed.py"]
+files = ["scripts", "tests/tooling", "tests/test_period_levels_removed.py", "tests/websocket_session.py", "tests/test_websocket_session.py"]
 strict = true
 warn_unused_configs = true
 
