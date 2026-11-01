@@ -20,6 +20,7 @@ STRICT_INPUTS = (
     "tests/websocket_session.py",
     "tests/test_websocket_session.py",
     "tests/test_ownership_guards.py",
+    "tests/test_history_bounds.py",
 )
 LOCKS = ("requirements-public-win-py313.lock", "requirements-dev-win-py313.lock")
 
