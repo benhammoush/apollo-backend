@@ -1,0 +1,27 @@
+# Exact merged-source verification only; no deployment follows this job.
+name: Verify main
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    name: Main checks
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-2025
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.13.16'
+          architecture: x64
+      - name: Install locked wheels
+        run: >-
+          python -m pip install --require-hashes --only-binary=:all: -r requirements-dev-win-py313.lock
+      - name: Verify source and synthetic contracts
+        run: python -B -m scripts.check_quality
