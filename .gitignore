@@ -1,4 +1,5 @@
 .venv/
+/DEV.md
 venv/
 __pycache__/
 *.py[cod]
