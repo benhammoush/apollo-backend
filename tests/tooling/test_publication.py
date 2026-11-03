@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from scripts.check_publication import (
+    REQUIRED,
     check_ignored,
     check_paths,
     check_text,
@@ -41,6 +42,8 @@ class PublicationTests(unittest.TestCase):
             "api\\a.py",
             "C:/a.py",
             ".github/workflows/deploy.yml",
+            ".coderabbit.yaml",
+            ".coderabbit.yml",
             "tests/fixtures/unreviewed.json",
         ):
             with self.subTest(name=name):
@@ -55,10 +58,21 @@ class PublicationTests(unittest.TestCase):
             "docs/verification.md",
             "LICENSE.md",
             ".github/workflows/verify-pr.yml",
-            ".coderabbit.yaml",
         ):
             with self.subTest(name=name):
                 self.assertTrue(public_path(name))
+
+    def test_complete_publication_does_not_require_retired_review_configuration(self) -> None:
+        """The complete admitted source set must pass without the removed bot configuration."""
+        self.assertNotIn(".coderabbit.yaml", REQUIRED)
+        self.assertNotIn(".coderabbit.yml", REQUIRED)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in REQUIRED:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("Public fixture\n", encoding="utf-8")
+            self.assertEqual(check_paths(root, source_paths(root)), len(REQUIRED))
 
     def test_credential_diagnostics_never_repeat_matches(self) -> None:
         """Construct fake secrets at runtime so the scanner has no fixture exemptions."""
